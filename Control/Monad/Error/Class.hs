@@ -54,6 +54,7 @@ import Control.Monad.Trans.Error (Error(..), ErrorT)
 import qualified Control.Monad.Trans.Except as ExceptT (throwE, catchE)
 import qualified Control.Monad.Trans.Error as ErrorT (throwError, catchError)
 import Control.Monad.Trans.Identity as Identity
+import Control.Monad.Trans.Cont as Cont
 import Control.Monad.Trans.List as List
 import Control.Monad.Trans.Maybe as Maybe
 import Control.Monad.Trans.Reader as Reader
@@ -78,7 +79,7 @@ import Control.Monad.Instances ()
 #endif
 
 import Data.Monoid
-import Prelude (Either(..), Maybe(..), either, flip, (.), IO)
+import Prelude (Either(..), Maybe(..), const, either, flip, ($), (.), IO)
 
 {- |
 The strategy of combining computations that can throw exceptions
@@ -160,6 +161,17 @@ instance Monad m => MonadError e (ExceptT e m) where
 --
 -- All of these instances need UndecidableInstances,
 -- because they do not satisfy the coverage condition.
+
+instance {-# OVERLAPPING #-} Monad m => MonadError e (Cont.ContT e (Cont.ContT r m)) where
+  throwError e = Cont.ContT (const (return e))
+  catchError c recover = Cont.ContT $ \successHandler -> Cont.ContT $ \errorHandler ->
+    runContT (runContT c successHandler)
+      $ \e -> runContT (runContT (recover e) successHandler) errorHandler
+
+instance MonadError e m => MonadError e (ContT r m)  where
+  throwError e = Cont.ContT (const (throwError e))
+  catchError c recover =
+    Cont.ContT $ \k -> catchError (runContT c k) $ \e -> Cont.runContT (recover e) k
 
 instance MonadError e m => MonadError e (IdentityT m) where
     throwError = lift . throwError
