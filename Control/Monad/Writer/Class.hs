@@ -30,6 +30,7 @@ module Control.Monad.Writer.Class (
     censor,
   ) where
 
+import Control.Monad.Trans.Cont as Cont
 import Control.Monad.Trans.Error as Error
 import Control.Monad.Trans.Except as Except
 import Control.Monad.Trans.Identity as Identity
@@ -54,6 +55,7 @@ import qualified Control.Monad.Trans.Writer.CPS as CPS (
 #endif
 
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Reader.Class as MonadReader
 import Control.Monad
 import Data.Monoid
 
@@ -211,3 +213,11 @@ instance MonadWriter w m => MonadWriter w (Strict.StateT s m) where
     tell   = lift . tell
     listen = Strict.liftListen listen
     pass   = Strict.liftPass pass
+
+instance (Monoid w, MonadReader.MonadReader w m) => MonadWriter w (Cont.ContT r m) where
+  tell w = Cont.ContT $ \k -> MonadReader.local (`mappend` w) (k ())
+  writer (a, w) = Cont.ContT $ \k -> MonadReader.local (`mappend` w) (k a)
+  pass c = Cont.ContT $ \k -> Cont.runContT c $ \(a, f) -> MonadReader.local f (k a)
+  listen c = Cont.ContT $ \k -> Cont.runContT c $ \a -> do
+    w <- MonadReader.ask
+    k (a, w)
