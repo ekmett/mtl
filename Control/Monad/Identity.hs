@@ -35,9 +35,6 @@ version of that monad.
 module Control.Monad.Identity (
     module Data.Functor.Identity,
     module Control.Monad.Trans.Identity,
-
-    module Control.Monad,
-    module Control.Monad.Fix,
    ) where
 
 import Data.Functor.Identity

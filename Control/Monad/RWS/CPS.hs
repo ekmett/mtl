@@ -40,8 +40,6 @@ module Control.Monad.RWS.CPS (
     withRWST,
     -- * Strict Reader-writer-state monads
     module Control.Monad.RWS.Class,
-    module Control.Monad,
-    module Control.Monad.Fix,
     module Control.Monad.Trans,
     module Data.Monoid,
   ) where

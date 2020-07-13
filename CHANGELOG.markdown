@@ -4,6 +4,9 @@ Unreleased
 * `Control.Monad.Cont` now re-exports `evalCont` and `evalContT`
 * Add `tryError`, `withError`, `handleError`, and `mapError` to
   `Control.Monad.Error.Class`, and re-export from `Control.Monad.Except`.
+* Stop re-exporting Control.Monad and Control.Monad.Fix from each non-.Class module
+* Stop re-exporting Control.Monad.IO.Class from Control.Monad.Trans
+* Stop re-exporting Data.Monoid from Control.Monad.Writer. modules
 
 2.2.2
 -----

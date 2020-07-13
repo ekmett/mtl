@@ -27,7 +27,6 @@
 
 module Control.Monad.Trans (
     module Control.Monad.Trans.Class,
-    module Control.Monad.IO.Class
   ) where
 
 import Control.Monad.IO.Class

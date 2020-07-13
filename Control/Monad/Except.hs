@@ -54,8 +54,6 @@ module Control.Monad.Except
     mapExcept,
     withExcept,
 
-    module Control.Monad,
-    module Control.Monad.Fix,
     module Control.Monad.Trans,
     -- * Example 1: Custom Error Data Type
     -- $customErrorExample

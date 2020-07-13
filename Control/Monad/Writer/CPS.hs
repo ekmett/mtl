@@ -36,8 +36,6 @@ module Control.Monad.Writer.CPS (
     WriterT,
     execWriterT,
     mapWriterT,
-    module Control.Monad,
-    module Control.Monad.Fix,
     module Control.Monad.Trans,
     module Data.Monoid,
   ) where

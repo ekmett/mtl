@@ -41,8 +41,6 @@ module Control.Monad.Error
     ErrorT(ErrorT),
     runErrorT,
     mapErrorT,
-    module Control.Monad,
-    module Control.Monad.Fix,
     module Control.Monad.Trans,
     -- * Example 1: Custom Error Data Type
     -- $customErrorExample

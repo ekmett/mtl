@@ -38,8 +38,6 @@ module Control.Monad.State.Strict (
     execStateT,
     mapStateT,
     withStateT,
-    module Control.Monad,
-    module Control.Monad.Fix,
     module Control.Monad.Trans,
     -- * Examples
     -- $examples

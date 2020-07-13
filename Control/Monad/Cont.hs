@@ -64,14 +64,13 @@ module Control.Monad.Cont (
     evalContT,
     mapContT,
     withContT,
-    module Control.Monad,
     module Control.Monad.Trans,
     -- * Example 1: Simple Continuation Usage
     -- $simpleContExample
 
     -- * Example 2: Using @callCC@
     -- $callCCExample
-    
+
     -- * Example 3: Using @ContT@ Monad Transformer
     -- $ContTExample
   ) where
