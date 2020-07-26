@@ -76,14 +76,59 @@ import Data.Monoid
 -- class MonadReader
 --  asks for the internal (non-mutable) state.
 
--- | See examples in "Control.Monad.Reader".
+-- | Monads with a notion of readable environment.
+--
+-- See examples in "Control.Monad.Reader".
 -- Note, the partially applied function type @(->) r@ is a simple reader monad.
 -- See the @instance@ declaration below.
+--
+-- === Laws
+--
+-- 'ask' has no side effects, and produces the same result at any time.
+--
+-- @
+-- 'ask' '>>' m    =   m
+-- 'ask' '>>=' \\s1 -> 'ask' '>>=' \\s2 -> k s1 s2   =   'ask' '>>=' \\s -> k s s
+--
+-- m '<*>' 'ask'   =   'ask' 'Control.Applicative.<**>' m
+-- @
+--
+-- @'local' f@ applies @f@ to the environment produced by 'ask'.
+--
+-- @
+-- 'local' f 'ask'   =   f '<$>' 'ask'
+-- 'local' f u     =   'ask' '>>=' \\s -> 'local' (\\_ -> f s) u
+-- @
+--
+-- 'local' is a monoid morphism from @(r -> r)@ to (reversed) @(m a -> m a)@
+-- (i.e., @('Data.Monoid.Endo' r -> 'Data.Monoid.Dual' ('Data.Monoid.Endo' (m a)))@).
+--
+-- @
+-- 'local' 'id'          = 'id'
+-- 'local' g '.' 'local' f = 'local' (f '.' g)
+-- @
+--
+-- 'local' is a monad morphism from 'm' to 'm'.
+--
+-- @
+-- 'local' f ('pure' x)   =  'pure' x
+-- 'local' f (a '>>=' k)  =  'local' f a '>>=' \\x -> 'local' f (k x)
+-- @
+--
+-- 'reader' must be equivalent to its default definition in terms of 'ask',
+-- and conversely.
+--
+-- Under that last condition, a property which is equivalent to the first two
+-- laws is that 'reader' must be a monad morphism from @'Reader' r@ to 'm'.
+--
+-- Another property equivalent to the first three laws is that there
+-- is a monad morphism @phi :: forall a. 'ReaderT' r m a -> m a@ such that
+-- @phi 'ask' = 'ask'@ and @phi . 'lift' = 'id'@.
 class Monad m => MonadReader r m | m -> r where
 #if __GLASGOW_HASKELL__ >= 707
     {-# MINIMAL (ask | reader), local #-}
 #endif
-    -- | Retrieves the monad environment.
+    -- | Retrieves the environment.
     ask   :: m r
     ask = reader id
 

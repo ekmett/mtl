@@ -16,7 +16,7 @@
 -- Stability   :  experimental
 -- Portability :  non-portable (multi-param classes, functional dependencies)
 --
--- MonadState class.
+-- 'MonadState' class.
 --
 --      This module is inspired by the paper
 --      /Functional Programming with Overloading and Higher-Order Polymorphism/,
@@ -59,17 +59,39 @@ import Data.Monoid
 
 -- ---------------------------------------------------------------------------
 
--- | Minimal definition is either both of @get@ and @put@ or just @state@
+-- | Monads with a notion of global state.
+--
+-- === Laws
+--
+-- @
+-- 'get'    '>>=' 'put'    = 'pure' ()
+-- 'put' s  '>>'  'get'    = 'put' s '>>' 'pure' s
+-- 'put' s1 '>>'  'put' s2 = 'put' s2
+-- @
+--
+-- Those three laws imply the following equations expressing that
+-- 'get' has no side effects:
+--
+-- @
+-- 'get' '>>' m   =   m
+-- 'get' '>>=' \\s1 -> 'get' '>>=' \\s2 -> k s1 s2   =   'get' '>>=' \\s -> k s s
+-- @
+--
+-- 'state' must be equivalent to its default definition in terms of 'get'
+-- and 'put', and conversely.
+-- Under that last condition, a property which is equivalent to the laws above
+-- is that 'state' must be a monad morphism, from
+-- @'Control.Monad.State.State' s@ to @m@.
 class Monad m => MonadState s m | m -> s where
-    -- | Return the state from the internals of the monad.
+    -- | Return the state.
     get :: m s
     get = state (\s -> (s, s))
 
-    -- | Replace the state inside the monad.
+    -- | Replace the state.
     put :: s -> m ()
     put s = state (\_ -> ((), s))
 
-    -- | Embed a simple state action into the monad.
+    -- | Embed a simple state action.
     state :: (s -> (a, s)) -> m a
     state f = do
       s <- get
