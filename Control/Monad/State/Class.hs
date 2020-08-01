@@ -46,6 +46,7 @@ import Control.Monad.Trans.Writer.Strict as Strict
 
 #if MIN_VERSION_transformers(0,5,3)
 import Control.Monad.Trans.Accum as Accum
+import Control.Monad.Trans.Select as Accum
 #endif
 
 #if MIN_VERSION_transformers(0,5,6)
@@ -197,6 +198,11 @@ instance
   , Functor m
 #endif
   ) => MonadState s (AccumT w m) where
+    get = lift get
+    put = lift . put
+    state = lift . state
+
+instance MonadState s m => MonadState s (SelectT r m) where
     get = lift get
     put = lift . put
     state = lift . state

@@ -61,6 +61,7 @@ import Control.Monad.Trans.Writer.Strict as Strict
 
 #if MIN_VERSION_transformers(0,5,3)
 import Control.Monad.Trans.Accum as Accum
+import Control.Monad.Trans.Select as Select
 #endif
 
 #if MIN_VERSION_transformers(0,5,6)
@@ -202,5 +203,19 @@ instance
   ) => MonadReader r (AccumT w m) where
     ask = lift ask
     local = Accum.mapAccumT . local
+    reader = lift . reader
+
+-- | @since 2.3
+instance
+  ( MonadReader r' m
+#if !MIN_VERSION_base(4,8,0)
+  , Functor m
+#endif
+  ) => MonadReader r' (SelectT r m) where
+    ask = lift ask
+    -- there is no Select.liftLocal
+    local f m = SelectT $ \c -> do
+      r <- ask
+      local f (runSelectT m (local (const r) . c))
     reader = lift . reader
 #endif

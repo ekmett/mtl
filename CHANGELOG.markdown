@@ -6,7 +6,7 @@ Unreleased
   `Control.Monad.Error.Class`, and re-export from `Control.Monad.Except`.
 * Remove `Control.Monad.List` and `Control.Monad.Error`
 * Remove instances of deprecated `ListT` and `ErrorT`
-* Add instances for `Control.Monad.Trans.Accum`
+* Add instances for `Control.Monad.Trans.Accum` and `Control.Monad.Trans.Select`
 
 2.2.2
 -----
