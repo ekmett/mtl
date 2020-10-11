@@ -45,11 +45,12 @@ module Control.Monad.Error.Class (
     withError,
     handleError,
     mapError,
+    liftExceptT,
   ) where
 
 import qualified Control.Exception
 import Control.Monad.Trans.Except (Except, ExceptT)
-import qualified Control.Monad.Trans.Except as ExceptT (throwE, catchE)
+import qualified Control.Monad.Trans.Except as ExceptT (throwE, catchE, runExceptT)
 import Control.Monad.Trans.Identity as Identity
 import Control.Monad.Trans.Maybe as Maybe
 import Control.Monad.Trans.Reader as Reader
@@ -225,7 +226,7 @@ tryError action = (liftM Right action) `catchError` (return . Left)
 -- | 'MonadError' analogue to the 'withExceptT' function.
 -- Modify the value (but not the type) of an error.  The type is
 -- fixed because of the functional dependency @m -> e@.  If you need
--- to change the type of @e@ use 'mapError'.
+-- to change the type of @e@ use 'mapError' or 'liftExceptT'.
 withError :: MonadError e m => (e -> e) -> m a -> m a
 withError f action = tryError action >>= either (throwError . f) return
 
@@ -239,3 +240,42 @@ handleError = flip catchError
 -- the result is lifted into the second 'MonadError' instance.
 mapError :: (MonadError e m, MonadError e' n) => (m (Either e a) -> n (Either e' b)) -> m a -> n b
 mapError f action = f (tryError action) >>= liftEither
+
+{- |
+A different 'MonadError' analogue to the 'withExceptT' function.
+Modify the value (and possibly the type) of an error in an @ExceptT@-transformed
+monad, while stripping the @ExceptT@ layer.
+
+This is useful for adapting the 'MonadError' constraint of a computation.
+
+For example:
+
+> data DatabaseError = ...
+>
+> performDatabaseQuery :: (MonadError DatabaseError m, ...) => m PersistedValue
+>
+> data AppError
+>   = MkDatabaseError DatabaseError
+>   | ...
+>
+> app :: (MonadError AppError m, ...) => m ()
+
+Given these types, @performDatabaseQuery@ cannot be used directly inside
+@app@, because the error types don't match. Using 'liftExceptT', an equivalent
+function with a different error type can be constructed:
+
+> performDatabaseQuery' :: (MonadError AppError m, ...) => m PersistedValue
+> performDatabaseQuery' = liftExceptT MkDatabaseError performDatabaseQuery
+
+Since the error types do match, @performDatabaseQuery'@ _can_ be used in @app@,
+assuming all other constraints carry over.
+
+This works by instantiating the @m@ in the type of @performDatabaseQuery@ to
+@ExceptT DatabaseError m'@, which satisfies the @MonadError DatabaseError@
+constraint. Immediately, the @ExceptT DatabaseError@ layer is unwrapped,
+producing 'Either' a @DatabaseError@ or a @PersistedValue@. If it's the former,
+the error is wrapped in @MkDatabaseError@ and re-thrown in the inner monad,
+otherwise the result value is returned.
+-}
+liftExceptT :: MonadError e' m => (e -> e') -> ExceptT e m a -> m a
+liftExceptT f m = ExceptT.runExceptT m >>= either (throwError . f) return
