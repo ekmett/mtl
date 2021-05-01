@@ -51,6 +51,8 @@ to understand and maintain.
 
 module Control.Monad.Cont.Class (
     MonadCont(..),
+    label,
+    label_,
   ) where
 
 import Control.Monad.Trans.Cont (ContT)
@@ -77,6 +79,7 @@ import Control.Monad.Trans.Writer.CPS as CPSWriter
 
 import Control.Monad
 import Data.Monoid
+import Data.Function
 
 class Monad m => MonadCont m where
     {- | @callCC@ (call-with-current-continuation)
@@ -160,3 +163,14 @@ instance
   ) => MonadCont (AccumT w m) where
     callCC = Accum.liftCallCC callCC
 #endif
+
+{- | Introduces a recursive binding to the continuation.
+Due to the use of @callCC@, calling the continuation will interrupt execution
+of the current block creating an effect similar to goto/setjmp in C.
+-}
+label :: MonadCont m  => a -> m (a -> m b, a)
+label a = callCC $ \k -> let go b = k (go, b) in return (go, a)
+
+{- | Simplified version of `label` without arguments -}
+label_ :: MonadCont m => m (m a)
+label_ = callCC $ return . fix

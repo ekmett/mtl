@@ -51,6 +51,8 @@ to understand and maintain.
 module Control.Monad.Cont (
     -- * MonadCont class
     MonadCont(..),
+    label,
+    label_,
     -- * The Cont monad
     Cont,
     cont,
@@ -71,9 +73,12 @@ module Control.Monad.Cont (
 
     -- * Example 2: Using @callCC@
     -- $callCCExample
-    
+
     -- * Example 3: Using @ContT@ Monad Transformer
     -- $ContTExample
+
+    -- * Example 4: Using @label@
+    -- $labelExample
   ) where
 
 import Control.Monad.Cont.Class
@@ -168,4 +173,20 @@ and passes it to the continuation.
 @askString@ takes as a parameter a continuation taking a string parameter,
 and returning @IO ()@.
 Compare its signature to 'runContT' definition.
+-}
+
+{-$labelExample
+
+The early exit behavior of 'Control.Monad.Cont.Class.callCC' can be leveraged to produce other idioms:
+
+> whatsYourNameLabel :: IO ()
+> whatsYourNameLabel = evalContT $ do
+>   (beginning, attempts) <- label (0 :: Int)
+>   liftIO $ putStrLn $ "Attempt #" <> show attempts
+>   liftIO $ putStrLn $ "What's your name?"
+>   name <- liftIO getLine
+>   when (null name) $ beginning (attempts + 1)
+>   liftIO $ putStrLn $ "Welcome, " ++ name ++ "!"
+
+Calling @beggining@ will interrupt execution of the block, skipping the welcome message, which will be printed only once at the very end of the loop.
 -}
